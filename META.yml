@@ -1,0 +1,25 @@
+---
+abstract: 'Ext.Direct implementation for Sencha ExtJS framework'
+author:
+  - 'Alexander Tokarev <tokarev@cpan.org>'
+build_requires:
+  ExtUtils::MakeMaker: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.58, CPAN::Meta::Converter version 2.110930001'
+license: unknown
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: RPC-ExtDirect
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  Attribute::Handlers: 0
+  JSON: 2.0
+  Test::More: 0
+  Test::Pod: 0
+version: 1.00
