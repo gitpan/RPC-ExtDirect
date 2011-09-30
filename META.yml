@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               RPC-ExtDirect
-version:            1.01
+version:            1.02
 abstract:           Ext.Direct implementation for Sencha ExtJS framework
 author:
     - Alexander Tokarev <tokarev@cpan.org>
