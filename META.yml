@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               RPC-ExtDirect
-version:            1.20
+version:            1.21
 abstract:           Ext.Direct implementation for Sencha ExtJS framework
 author:
     - Alexander Tokarev <tokarev@cpan.org>
@@ -11,7 +11,7 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    Attribute::Handlers:  0
+    Attribute::Handlers:  0.87
     JSON:                 2.0
     Test::More:           0
     Test::Pod:            0
