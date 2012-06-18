@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name:               RPC-ExtDirect
-version:            1.31
-abstract:           Ext.Direct implementation for Sencha ExtJS framework
+version:            2.00
+abstract:           Ext.Direct implementation for Perl
 author:
     - Alexander Tokarev <tokarev@cpan.org>
 license:            perl
@@ -14,6 +14,7 @@ build_requires:
 requires:
     Attribute::Handlers:  0.87
     JSON:                 2.0
+    perl:                 5.012
 resources:
     bugtracker:  http://github.com/nohuhu/RPC-ExtDirect/issues
     repository:  http://github.com/nohuhu/RPC-ExtDirect
