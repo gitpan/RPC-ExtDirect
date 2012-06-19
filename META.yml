@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               RPC-ExtDirect
-version:            2.00
+version:            2.01
 abstract:           Ext.Direct implementation for Perl
 author:
     - Alexander Tokarev <tokarev@cpan.org>
