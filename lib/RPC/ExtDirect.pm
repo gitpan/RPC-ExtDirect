@@ -16,7 +16,7 @@ use Attribute::Handlers;
 # Version of this module.
 #
 
-our $VERSION = '2.01';
+our $VERSION = '2.02';
 
 ### PACKAGE GLOBAL VARIABLE ###
 #
