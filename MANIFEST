@@ -1,6 +1,8 @@
 Changes
 lib/RPC/ExtDirect.pm
 lib/RPC/ExtDirect/API.pm
+lib/RPC/ExtDirect/BEGIN.pm
+lib/RPC/ExtDirect/CHECK.pm
 lib/RPC/ExtDirect/Config.pm
 lib/RPC/ExtDirect/Demo/PollProvider.pm
 lib/RPC/ExtDirect/Demo/Profile.pm
@@ -41,5 +43,4 @@ t/lib/RPC/ExtDirect/Test/PollProvider.pm
 t/lib/RPC/ExtDirect/Test/Qux.pm
 t/lib/RPC/ExtDirect/Test/Hooks.pm
 t/pod.t
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
+META.yml                                 Module meta-data (added by MakeMaker)
