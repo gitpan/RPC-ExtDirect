@@ -25,4 +25,4 @@ requires:
 resources:
   bugtracker: http://github.com/nohuhu/RPC-ExtDirect/issues
   repository: http://github.com/nohuhu/RPC-ExtDirect
-version: 2.12
+version: 2.13
