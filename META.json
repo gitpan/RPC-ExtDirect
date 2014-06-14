@@ -1,10 +1,10 @@
 {
-   "abstract" : "Ext.Direct implementation for Perl",
+   "abstract" : "Core Ext.Direct implementation",
    "author" : [
-      "Alexander Tokarev <tokarev@cpan.org>"
+      "Alex Tokarev <tokarev@cpan.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.140640",
    "license" : [
       "perl_5"
    ],
@@ -22,8 +22,7 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "Test::More" : "0.48",
-            "Test::Pod" : "1.00"
+            "Test::More" : "0.48"
          }
       },
       "configure" : {
@@ -48,5 +47,5 @@
          "url" : "http://github.com/nohuhu/RPC-ExtDirect"
       }
    },
-   "version" : "2.15"
+   "version" : "3.00"
 }
