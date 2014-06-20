@@ -34,8 +34,15 @@ sub new {
     my $is_ordered
         = defined $arg{len} && !$pollHandler && !$formHandler;
     
+    my $processor = $pollHandler ? 'pollHandler'
+                  : $formHandler ? 'formHandler'
+                  : $is_named    ? 'named'
+                  : $is_ordered  ? 'ordered'
+                  :                'default'
+                  ;
+    
     # We avoid hard binding on the hook class
-    { local $@; eval "require $hook_class"; }
+    eval "require $hook_class";
     
     my %hooks;
     
@@ -47,9 +54,11 @@ sub new {
     }
     
     return bless {
-        upload_arg => 'file_uploads',
-        is_named   => $is_named,
-        is_ordered => $is_ordered,
+        upload_arg        => 'file_uploads',
+        is_named          => $is_named,
+        is_ordered        => $is_ordered,
+        argument_checker  => "check_${processor}_arguments",
+        argument_preparer => "prepare_${processor}_arguments",
         %arg,
         %hooks,
     }, $class;
@@ -142,7 +151,7 @@ sub code {
 # and input data; return the result or die with exception
 #
 # We accept named parameters here to keep the signature compatible
-# with the corresponding Hook method
+# with the corresponding Hook method.
 #
 
 sub run {
@@ -160,21 +169,59 @@ sub run {
 
 ### PUBLIC INSTANCE METHOD ###
 #
+# Check the arguments that were passed in the Ext.Direct request
+# to make sure they conform to the API declared by this Method.
+# Arguments should be passed in a reference, either hash- or array-.
+# This method is expected to die if anything is wrong, or return 1
+# on success.
+#
+# This method is intentionally split into several submethods,
+# instead of using polymorphic subclasses with method overrides.
+# Having all these in the same class is easier to maintain and
+# augment in user subclasses.
+#
+# The same applies to `prepare_method_arguments` below.
+#
+
+sub check_method_arguments {
+    my $self = shift;
+    
+    my $checker = $self->argument_checker;
+    
+    return $self->$checker(@_);
+}
+
+### PUBLIC INSTANCE METHOD ###
+#
 # Prepare the arguments to be passed to the called Method,
-# according to the Method's expectations
+# according to the Method's expectations. This works two ways:
+# on the server side, Request will call this method to prepare
+# the arguments that are to be passed to the actual Method code
+# that does things; on the client side, Client will call this
+# method to prepare the arguments that are about to be encoded
+# in JSON and passed over to the client side.
+#
+# The difference is that the server side wants an unfolded list,
+# and the client side wants a reference, either hash- or array-.
+# Because of that, prepare_*_arguments are context sensitive.
 #
 
 sub prepare_method_arguments {
     my $self = shift;
     
-    my $preparer = $self->pollHandler ? "prepare_pollHandler_arguments"
-                 : $self->formHandler ? "prepare_formHandler_arguments"
-                 : $self->params      ? "prepare_named_arguments"
-                 : defined $self->len ? "prepare_ordered_arguments"
-                 :                      "prepare_default_arguments"
-                 ;
+    my $preparer = $self->argument_preparer;
     
     return $self->$preparer(@_);
+}
+
+### PUBLIC INSTANCE METHOD ###
+#
+# Check the arguments for a pollHandler
+#
+
+sub check_pollHandler_arguments {
+    # pollHandlers are not supposed to receive any arguments
+    return 1;
 }
 
 ### PUBLIC INSTANCE METHOD ###
@@ -187,12 +234,29 @@ sub prepare_pollHandler_arguments {
     
     my @actual_arg = ();
     
+    # When called from the client, env_arg should not be defined
     my $env_arg = $self->env_arg;
     
     no warnings;
     splice @actual_arg, $env_arg, 0, $arg{env} if defined $env_arg;
     
-    return @actual_arg;
+    return wantarray ? @actual_arg : [ @actual_arg ];
+}
+
+### PUBLIC INSTANCE METHOD ###
+#
+# Check the arguments for a formHandler
+#
+
+sub check_formHandler_arguments {
+    my ($self, $arg) = @_;
+    
+    # Nothing to check here really except that it's a hashref
+    die sprintf "ExtDirect formHandler Method %s.%s expects named " .
+                "arguments in hashref\n", $self->action, $self->name
+        unless 'HASH' eq ref $arg;
+    
+    return 1;
 }
 
 ### PUBLIC INSTANCE METHOD ###
@@ -224,7 +288,32 @@ sub prepare_formHandler_arguments {
 
     $data{ $env_arg } = $env if $env_arg;
 
-    return %data;
+    return wantarray ? %data : { %data };
+}
+
+### PUBLIC INSTANCE METHOD ###
+#
+# Check the arguments for a Method with named parameters
+#
+
+sub check_named_arguments {
+    my ($self, $arg) = @_;
+    
+    die sprintf "ExtDirect Method %s.%s expects named arguments " .
+                "in hashref\n", $self->action, $self->name
+        unless 'HASH' eq ref $arg;
+    
+    my @params = @{ $self->params };
+    
+    my @missing = map { !exists $arg->{$_} ? $_ : () } @params;
+    
+    die sprintf "ExtDirect Method %s.%s requires the following ".
+                 "parameters: '%s'; these are missing: '%s'\n",
+                 $self->action, $self->name,
+                 join(', ', @params), join(', ', @missing)
+        if @missing;
+    
+    return 1;
 }
 
 ### PUBLIC INSTANCE METHOD ###
@@ -256,7 +345,30 @@ sub prepare_named_arguments {
     
     $actual_arg{ $env_arg } = $env if defined $env_arg;
 
-    return %actual_arg;
+    return wantarray ? %actual_arg : { %actual_arg };
+}
+
+### PUBLIC INSTANCE METHOD ###
+#
+# Check the arguments for a Method with ordered parameters
+#
+
+sub check_ordered_arguments {
+    my ($self, $arg) = @_;
+    
+    die sprintf "ExtDirect Method %s.%s expects ordered arguments " .
+                "in arrayref\n"
+        unless 'ARRAY' eq ref $arg;
+    
+    my $want_len = $self->len;
+    my $have_len = @$arg;
+    
+    die sprintf "ExtDirect Method %s.%s requires %d argument(s) ".
+                "but only %d are provided\n",
+                $self->action, $self->name, $want_len, $have_len
+        unless $have_len >= $want_len;
+    
+    return 1;
 }
 
 ### PUBLIC INSTANCE METHOD ###
@@ -270,15 +382,26 @@ sub prepare_ordered_arguments {
     my $env   = $arg{env};
     my $input = $arg{input};
     
-    my @data = @$input;
-    my @arg  = splice @data, 0, $self->len;
+    my @data       = @$input;
+    my @actual_arg = splice @data, 0, $self->len;
     
     my $env_arg = $self->env_arg;
     
     no warnings;
-    splice @arg, $env_arg, 0, $env if defined $env_arg;
+    splice @actual_arg, $env_arg, 0, $env if defined $env_arg;
     
-    return @arg;
+    return wantarray ? @actual_arg : [ @actual_arg ];
+}
+
+### PUBLIC INSTANCE METHOD ###
+#
+# Check the arguments when the Method signature is unknown
+#
+
+sub check_default_arguments {
+    # No checking means the arguments are not checked.
+    # Sincerely, C.O.
+    return 1;
 }
 
 ### PUBLIC INSTANCE METHOD ###
@@ -289,7 +412,9 @@ sub prepare_ordered_arguments {
 sub prepare_default_arguments {
     my ($self, %arg) = @_;
     
-    return ( $arg{input}, $arg{env} );
+    my @actual_arg = ( $arg{input}, $arg{env} );
+    
+    return wantarray ? @actual_arg : [ @actual_arg ];
 }
 
 ### PUBLIC INSTANCE METHOD ###
@@ -318,6 +443,8 @@ my $accessors = [qw/
     package
     env_arg
     upload_arg
+    argument_checker
+    argument_preparer
 /,
     __PACKAGE__->HOOK_TYPES,
 ];

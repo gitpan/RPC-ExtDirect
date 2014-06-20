@@ -9,7 +9,11 @@
 # It's that simple.
 #
 
-package TheBug;
+package     # avoid indexing by the nosy PAUSE
+    TheBug;
+
+use strict;
+use warnings;
 
 sub new     { bless { message => $_[1] }, $_[0] }
 sub result  { $_[0] }
