@@ -1,4 +1,6 @@
-package RPC::ExtDirect::Test::Data::Env;
+# This does not need to be indexed by PAUSE
+package
+    RPC::ExtDirect::Test::Data::Env;
 
 use strict;
 use warnings;
@@ -39,12 +41,12 @@ my $tests = [{
         comparator => 'cmp_json',
         cgi_content =>
             q|{"action":"Env","method":"http_list","result":|.
-            q|["HTTP_ACCEPT","HTTP_ACCEPT_CHARSET","HTTP_CONNECTION",|.
-            q|"HTTP_COOKIE","HTTP_HOST","HTTP_USER_AGENT"],|.
+            q|["http_accept","http_accept_charset","http_connection",|.
+            q|"http_cookie","http_host","http_user_agent"],|.
             q|"tid":1,"type":"rpc"}|,
         plack_content =>
             q|{"action":"Env","method":"http_list","result":|.
-            q|["COOKIE","Content-Length","Content-Type","Host"],|.
+            q|["content-length","content-type","cookie","host"],|.
             q|"tid":1,"type":"rpc"}|,
         anyevent_content =>
             q|{"action":"Env","method":"http_list","result":|.
@@ -141,7 +143,7 @@ my $tests = [{
             q|"tid":1,"type":"rpc"}|,
         content =>
             q|{"action":"Env","method":"param_list","result":|.
-            q|["POSTDATA"],|.
+            q|["postdata"],|.
             q|"tid":1,"type":"rpc"}|,
     },
 }, {
